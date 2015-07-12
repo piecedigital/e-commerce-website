@@ -1,0 +1,14 @@
+<h1>{{title}}</h1>
+<br><br>
+<h2>Hello, {{name}}</h2>
+<a href="/">Home</a>
+<br><br>
+<ul>
+	{{#each transactions}}
+	<li>
+		<span>{{amount}}</span><br>
+		<span>{{paid_with}}</span><br>
+		<span>{{last4}}</span>
+	</li>
+	{{/each}}
+</ul>
