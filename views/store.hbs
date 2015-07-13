@@ -1,48 +1,48 @@
 <h1>{{title}}</h1>
 <br><br>
-<form action="/point-purchase" method="POST" id="payment-form">
-  <span class="payment-errors"></span>
-
-  <div class="form-row">
-    <label>
-      <span>Card Number</span>
-      <input type="text" size="20" data-stripe="number" value="4242424242424242" />
-    </label>
-  </div>
-
-  <div class="form-row">
-    <label>
-      <span>CVC</span>
-      <input type="text" size="4" data-stripe="cvc" value="444" />
-    </label>
-  </div>
-
-  <div class="form-row">
-    <label>
-      <span>Expiration (MM/YYYY)</span>
-      <input type="text" size="2" data-stripe="exp-month" value="07"/>
-    </label>
-    <span> / </span>
-    <input type="text" size="4" data-stripe="exp-year" value="2017" />
-  </div>
+<form action="/point-purchase" method="POST" class="item-form">
 
 	<div class="form-row">
     <label>
       <span>Items</span>
-      <select name="points">
-      	<option>10</option>
-      	<option>20</option>
-      	<option>30</option>
-      </select>
+      <div name="item">Shoes</div>
+      <div name="cost">5.50</div>
+      <div name="desc">Black Shoes</div>
+      <input type="hidden" name="item" value="Shoes">Shoes</input>
+      <input type="hidden" name="cost" value="5.50">5.50</input>
+      <input type="hidden" name="desc" value="Black Shoes">Black Shoes</input>
     </label>
   </div>  
 
-  <button type="submit">Submit Payment</button>
+  <button type="submit">Add To Cart</button>
 </form>
 
 <script type="text/javascript" src="js/jquery-1.11.3.min.js"></script>
-<script type="text/javascript" src="https://js.stripe.com/v2/"></script>
 <script type="text/javascript">
-	Stripe.setPublishableKey("pk_test_VQ3xyZuLYfLEkOR98EX2N8xP");
+  $(document).ready(function() {
+    $(document).on("submit", ".item-form", function() {
+      var formData = $(this).serializeArray();
+
+      console.log(formData);
+
+      var dataObj = {
+        item: formData[0].value,
+        cost: formData[1].value,
+        desc: formData[2].value
+      };
+
+      $.ajax({
+        url: "/add-to-cart",
+        type: "POST",
+        cookies: document.cookie,
+        data: dataObj,
+        success: function(res) {
+          console.log("data sent successfully");
+          console.log(res);
+        }
+      });
+
+      return false;
+    });
+  });
 </script>
-<script type="text/javascript" src="js/payment.js"></script>

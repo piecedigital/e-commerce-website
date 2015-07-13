@@ -17,6 +17,21 @@ app.set("view options", { layout: "layout" });
 // config
 // uncomment after placing your favicon in /public
 //app.use(favicon(__dirname + '/public/favicon.ico'));
+app.use(function(req, res, next) {
+  res.setHeader("Access-Control-Allow-Origin", "*");
+
+  // Request methods you wish to allow
+  res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS, PUT, PATCH, DELETE');
+
+  // Request headers you wish to allow
+  res.setHeader('Access-Control-Allow-Headers', 'X-Requested-With,content-type');
+
+  // Set to true if you need the website to include cookies in the requests sent
+  // to the API (e.g. in case you use sessions)
+  res.setHeader('Access-Control-Allow-Credentials', false);
+
+  next();
+});
 app.use(logger('dev'));
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: false }));
@@ -34,7 +49,7 @@ app.use(helmet.contentSecurityPolicy({
   objectSrc: ["*"],
   mediaSrc: ["'self'", "youtube.com", "twitch.tv"],
   frameSrc: ["*"],
-  sandbox: ["allow-forms", "allow-scripts"],
+  sandbox: ["allow-forms", "allow-scripts", "allow-same-origin"],
   reportUri: '/report-violation',
   reportOnly: false, // set to true if you only want to report errors 
   setAllHeaders: false, // set to true if you want to set all headers 
