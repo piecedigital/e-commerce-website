@@ -155,6 +155,24 @@ db.open(function(err, db) {
 				res.render('store', { "page" : "store", "title" : "Store", "logType" : "login", "logText" : "Login" });
 			}
 		})
+		.get('/checkout', function(req, res, next) {
+		  var session = req.cookies["sessId"] || "";
+
+			if(session) {
+	      Sess.findOne({  "_id" : new ObjectId(session) }, function(err, doc) {
+	        if(err) throw err;
+
+	        if(doc) {
+	  				res.render('checkout', { "page" : "checkout", "title" : "Checkout Items", "logType" : "logout", "logText" : "Logout" });
+	        } else {
+	        	res.clearCookie("sessId");
+	  				res.render('checkout', { "page" : "checkout", "title" : "Checkout Items", "logType" : "login", "logText" : "Login" });
+	        }
+	      });
+			} else {
+				res.render('checkout', { "page" : "checkout", "title" : "Checkout Items", "logType" : "login", "logText" : "Login" });
+			}
+		})
 		.get('/success', function(req, res, next) {
 		  res.render('success', { "page" : "success", "title" : "Stripe Verdict" });
 		})
@@ -225,7 +243,7 @@ db.open(function(err, db) {
 		//POST reqeust to add items to cart
 		.post("/add-to-cart", store(db).addToCart)
 		//POST reqeust to purchase items
-		.post("/points-purchase", store(db).purchase)
+		.post("/purchase", store(db).purchase)
 	  //POST request for user signup
 		.post("/signup", account(db).signup)
 		//POST request for user logins

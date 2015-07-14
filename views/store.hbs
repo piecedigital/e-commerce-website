@@ -1,6 +1,6 @@
 <h1>{{title}}</h1>
 <br><br>
-<form action="/point-purchase" method="POST" class="item-form">
+<form action="/add-to-cart" method="POST" class="item-form">
 
 	<div class="form-row">
     <label>
@@ -8,20 +8,22 @@
       <div name="item">Shoes</div>
       <div name="cost">5.50</div>
       <div name="desc">Black Shoes</div>
-      <input type="hidden" name="item" value="Shoes">Shoes</input>
-      <input type="hidden" name="cost" value="5.50">5.50</input>
-      <input type="hidden" name="desc" value="Black Shoes">Black Shoes</input>
+      <input type="hidden" name="item" value="Shoes"></input>
+      <input type="hidden" name="cost" value="550"></input>
+      <input type="hidden" name="desc" value="Black Shoes"></input>
     </label>
   </div>  
 
   <button type="submit">Add To Cart</button>
+  <div class="msg"></div>
 </form>
 
 <script type="text/javascript" src="js/jquery-1.11.3.min.js"></script>
 <script type="text/javascript">
   $(document).ready(function() {
     $(document).on("submit", ".item-form", function() {
-      var formData = $(this).serializeArray();
+      var form = $(this),
+          formData = form.serializeArray();
 
       console.log(formData);
 
@@ -37,8 +39,14 @@
         cookies: document.cookie,
         data: dataObj,
         success: function(res) {
-          console.log("data sent successfully");
           console.log(res);
+          if(res.action === "redirect") {
+            window.location.href = res.url;
+          }
+          if(res.action === "success") {
+            console.log(res.msg);
+            $(form).find(".msg").html(res.msg);
+          }
         }
       });
 

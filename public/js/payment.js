@@ -1,29 +1,61 @@
 $(document).ready(function() {
-	$("#payment-form").on("submit", function(e) {
-		var form = $(this);
+  $(document).on("submit", "#checkout-form", function() {
+    var form = $(this),
+        formData = form.serializeArray();
 
-		form.find("button").prop("disabled", true);
+    Stripe.card.createToken(form, stripeResponseHandler);
 
-		Stripe.card.createToken(form, stripeResponseHandler);
+    $(form).find("button").prop("disabled", true);
 
-		// prevent default action
-		return false
-	});
 
-	function stripeResponseHandler(status, res) {
-		var form = $("#payment-form");
+    return false;
+  });
 
-		if(res.error) {
-			// show errors in the form
-			form.find(".payment-errors").text(res.error.message);
-			form.find("button").prop("disabled", false);
-		} else {
-			// insert token (res.id) in the form for server submission
-			console.log("sent");
-			var token = res.id;
-			form.append("<input type='hidden' name='stripeToken' value='" + token + "'>");
-			form.get(0).submit();
-			console.log(res);
-		}
-	}
+  function stripeResponseHandler(status, res) {
+    var form = $("#checkout-form");
+
+    if(res.error) {
+      // show errors in the form
+      $(form).find(".msg").text(res.error.message);
+      $(form).find("button").prop("disabled", false);
+    } else {
+      // insert token (res.id) in the form for server submission
+      console.log("sent");
+
+      var token = res.id;
+
+      var dataObj = {
+        stripeToken: token
+      }
+
+      console.log(token);
+      console.log(dataObj);
+      sendData(dataObj);
+    }
+  }
+
+  function sendData(dataObj) {
+  	var form = $("#checkout-form");
+  	
+    $.ajax({
+      url: "/purchase",
+      type: "POST",
+      cookies: document.cookie,
+      data: dataObj,
+      success: function(res) {
+        console.log(res);
+        if(res.action === "redirect") {
+          window.location.href = res.url;
+        }
+        if(res.action === "success") {
+          console.log(res.msg);
+          $(form).find(".msg").html(res.msg);
+        }
+        if(res.action === "error") {
+          console.log(res.msg);
+          $(form).find(".msg").html(res.msg);
+        }
+      }
+    });
+  }
 });

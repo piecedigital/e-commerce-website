@@ -1,0 +1,38 @@
+<h1>{{title}}</h1>
+<br><br>
+<form action="/purchase" method="POST" id="checkout-form">
+
+	<div class="">
+    <label>
+      <span>Card Number</span>
+      <input type="text" size="20" data-stripe="number" value="4242424242424242">
+    </label>
+  </div>
+
+  <div class="">
+    <label>
+      <span>CVC</span>
+      <input type="text" size="4" data-stripe="cvc" value="4242"/>
+    </label>
+  </div>
+
+  <div class="">
+    <label>
+      <span>Expiration (MM/YYYY)</span>
+      <input type="text" size="2" data-stripe="exp-month" value="07">
+    </label>
+    <span> / </span>
+    <input type="text" size="4" data-stripe="exp-year" value="2017">
+  </div>  
+
+  <button type="submit">Checkout</button>
+  <div class="msg"></div>
+</form>
+
+<script type="text/javascript" src="js/jquery-1.11.3.min.js"></script>
+<script type="text/javascript" src="https://js.stripe.com/v2/"></script>
+<script type="text/javascript">
+  // This identifies your website in the createToken call below
+  Stripe.setPublishableKey('pk_test_VQ3xyZuLYfLEkOR98EX2N8xP');
+</script>
+<script type="text/javascript" src="js/payment.js"></script>

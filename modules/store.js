@@ -44,85 +44,124 @@ module.exports = function(db) {
                       }
                     }
                   });
+                res.send({
+                  action: "success",
+                  msg: "Successfully added item to cart"
+                });
               } else {
                 User.remove({ "_id" : new ObjectId(session) });
                 res.clearCookie("sessId");
-                res.redirect("/login");
+                res.send({
+                  action: "redirect",
+                  url: "/login"
+                });
               }
             });
           } else {
-            res.redirect("/login");
+            res.send({
+              action: "redirect",
+              url: "/login"
+            });
           }
         });
       } else {
-        res.redirect("/login");
+        res.send({
+          action: "redirect",
+          url: "/login"
+        });
       }
     },
     purchase: function(req, res, next) {
-      var stripeToken = req.body.stripeToken,
+      var stripeToken = req.body.stripeToken || "",
           session = req.cookies["sessId"] || "";
       console.log(req.body);
+      if(req.body && req.body !== {} ) {
+        if(session) {
+          Sess.findOne({  "_id" : new ObjectId(session) }, function(err, doc) {
+            if(err) throw err;
 
-      if(session) {
-        Sess.findOne({  "_id" : new ObjectId(session) }, function(err, doc) {
-          if(err) throw err;
+            if(doc) {
+              User.findOne({ "username" : doc.user }, function(err2, doc2) {
+                if(err2) throw err2;
 
-          if(doc) {
-            User.findOne({ "username" : doc.user }, function(err2, doc2) {
-              if(err2) throw err2;
+                if(doc2) {
+                  if(doc2.cart && doc2.cart.length > 0) {
+                    var amount = 0;
+                    doc2.cart.map(function(elem) {
+                      var tempNum = parseInt(elem.cost);
+                      amount += tempNum;
+                    });
+                    console.log("$" + amount \ 100);
+                    //console.log("amount type: " + typeof amount);
+                    //amount = parseInt(amount).toFixed(2);
 
-              if(doc2) {
-                if(doc2.cart && doc2.cart.length > 0) {
-                  var amount = 0;
-                  amount += doc2.cart.map(function(elem) {
-                    return parseInt(elem.cost);
-                  });
+                    console.log("strike token: " + stripeToken);
+                    var charge = stripe.charges.create({
+                      amount: amount, // amount in cents, again
+                      currency: "usd",
+                      source: stripeToken,
+                      description: "Purchase of " + doc2.cart.length + "items",
+                      statement_descriptor: "website purchases"
+                    }, function(err, chargeRes) {
+                      if (err) {
+                        // The card has been declined
+                        console.log(err);
+                      } else {
+                        //console.log(chargeRes);
 
-                  var charge = stripe.charges.create({
-                    amount: amount.toFixed(2), // amount in cents, again
-                    currency: "usd",
-                    source: stripeToken,
-                    description: "Purchase of " + doc2.cart.length + "items",
-                    statement_descriptor: "website purchases"
-                  }, function(err, charge) {
-                    if (err && err.type === 'StripeCardError') {
-                      // The card has been declined
-                      console.log(err);
-                    } else {
-                      //console.log(charge);
+                        var lastTransaction = {
+                          "id": chargeRes.id,
+                          "amount": (chargeRes.amount / 100).toFixed(2),
+                          "paid_with": chargeRes.source.object,
+                          "last4": chargeRes.source.last4
+                        }
 
-                      var lastTransaction = {
-                        "id": charge.id,
-                        "amount": (charge.amount / 100).toFixed(2),
-                        "paid_with": charge.source.object,
-                        "last4": charge.source.last4
-                      }
+                        User.update({ "username" : doc2.username },
+                          {
+                            "$push" : { "transactions" : lastTransaction },
+                            "$push" : { "purchaseHistory" : { "$each" : doc2.cart } },
+                            "$set" : { "cart" : [] }
+                          });
 
-                      User.update({ "username" : doc2.username },
-                        {
-                          "$push" : { "transactions" : lastTransaction },
-                          "$push" : { "purchaseHistory" : { "$each" : doc2.cart } },
-                          "$set" : { "cart" : [] }
+                        res.send({
+                          action: "success",
+                          msg: "Successfully purchased all items"
                         });
-
-                      res.redirect("/success");
-                    }
-                  });
+                      }
+                    });
+                  } else {
+                    res.send({
+                      action: "redirect",
+                      url: "/store"
+                    });
+                  }
                 } else {
-                  res.render('store', { "page" : "store", "title" : "Store", "logType" : "logout", "logText" : "Logout", "msg" : "No items in your cart" });
+                  User.remove({ "_id" : new ObjectId(session) });
+                  res.clearCookie("sessId");
+                  res.send({
+                    action: "redirect",
+                    url: "/login"
+                  });
                 }
-              } else {
-                User.remove({ "_id" : new ObjectId(session) });
-                res.clearCookie("sessId");
-                res.redirect("/login");
-              }
-            });
-          } else {
-            res.redirect("/login");
-          }
-        });
+              });
+            } else {
+              res.send({
+                action: "redirect",
+                url: "/login"
+              });
+            }
+          });
+        } else {
+          res.send({
+            action: "redirect",
+            url: "/login"
+          });
+        }
       } else {
-        res.redirect("/login");
+        res.send({
+          action: "error",
+          msg: "No data submitted"
+        });
       }
     }     
   }
